@@ -95,14 +95,14 @@ module CouchRest
     
     def parse url
       case url
-      when /^http:\/\/(.*)\/(.*)\/(.*)/
+      when /^https?:\/\/(.*)\/(.*)\/(.*)/
         host = $1
         db = $2
         docid = $3
-      when /^http:\/\/(.*)\/(.*)/
+      when /^https?:\/\/(.*)\/(.*)/
         host = $1
         db = $2
-      when /^http:\/\/(.*)/
+      when /^https?:\/\/(.*)/
         host = $1
       when /(.*)\/(.*)\/(.*)/
         host = $1
