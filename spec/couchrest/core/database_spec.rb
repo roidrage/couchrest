@@ -58,6 +58,7 @@ describe CouchRest::Database do
     end
     it "should return the result of the temporary function" do
       rs = @db.temp_view(:map => "function(doc){emit(doc.beverage, doc.count)}", :reduce =>  "function(beverage,counts){return sum(counts)}")
+      # rs.should == 'x'
       rs['rows'][0]['value'].should == 9
     end
   end
@@ -238,7 +239,12 @@ describe CouchRest::Database do
       }
       @db.save_doc(@doc)
     end
-       
+    
+    # Depreacated
+    # it "should get the attachment with the doc's _id" do
+    #   @db.fetch_attachment("mydocwithattachment", "test.html").should == @attach
+    # end
+    
     it "should get the attachment with the doc itself" do
       @db.fetch_attachment(@db.get('mydocwithattachment'), 'test.html').should == @attach
     end
@@ -247,7 +253,7 @@ describe CouchRest::Database do
   describe "PUT attachment from file" do
     before(:each) do
       filename = FIXTURE_PATH + '/attachments/couchdb.png'
-      @file = File.open(filename)
+      @file = File.open(filename, "rb")
     end
     after(:each) do
       @file.close
@@ -255,15 +261,12 @@ describe CouchRest::Database do
     it "should save the attachment to a new doc" do
       r = @db.put_attachment({'_id' => 'attach-this'}, 'couchdb.png', image = @file.read, {:content_type => 'image/png'})
       r['ok'].should == true
-      exec('date')
       doc = @db.get("attach-this")
       attachment = @db.fetch_attachment(doc,"couchdb.png")
       if attachment.respond_to?(:net_http_res)  
-        attachment.net_http_res.body.length == image.length
-        # attachment.net_http_res.body.should == image
+        attachment.net_http_res.body.should == image
       else
-        attachment.length.should == image.length
-        # attachment.should == image
+        attachment.should == image
       end
     end
   end
@@ -454,6 +457,7 @@ describe CouchRest::Database do
     it "should fail to resave without the rev" do
       @doc['them-keys'] = 'huge'
       @doc['_rev'] = 'wrong'
+      # @db.save_doc(@doc)
       lambda {@db.save_doc(@doc)}.should raise_error
     end
     it "should update the document" do
@@ -548,7 +552,7 @@ describe CouchRest::Database do
         newdoc['artist'].should == 'Zappa'
       end
       it "should fail without an _id" do
-        lambda{@db.copy({"not"=>"a real doc"})}.should raise_error(ArgumentError)
+        lambda{@db.copy_doc({"not"=>"a real doc"})}.should raise_error(ArgumentError)
       end
     end
     describe "to an existing location" do
@@ -633,7 +637,9 @@ describe CouchRest::Database do
     end
     it "should delete the database" do
       db = @cr.database('couchrest-test')
+      # r = 
       db.delete!
+      # r['ok'].should == true
       @cr.databases.should_not include('couchrest-test')
     end
   end
@@ -701,5 +707,8 @@ describe CouchRest::Database do
       begin @db2.recreate! rescue nil end
       @cr.databases.should include(@db2.name)
     end
+    
   end
+
+
 end

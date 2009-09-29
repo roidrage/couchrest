@@ -103,26 +103,44 @@ Check spec/couchrest/more and spec/fixtures/more for more examples
       save_callback :before, :generate_slug_from_title
 
       def generate_slug_from_title
-        self['slug'] = title.downcase.gsub(/[^a-z0-9]/,'-').squeeze('-').gsub(/^\-|\-$/,'') if new_document?
+        self['slug'] = title.downcase.gsub(/[^a-z0-9]/,'-').squeeze('-').gsub(/^\-|\-$/,'') if new?
       end
     end
 
 ### Callbacks
 
-`CouchRest::ExtendedDocuments` instances have 2 callbacks already defined for you:
-    `create_callback`, `save_callback`, `update_callback` and `destroy_callback`
+`CouchRest::ExtendedDocuments` instances have 4 callbacks already defined for you:
+    `:validate`, `:create`, `:save`, `:update` and `:destroy`
     
-In your document inherits from `CouchRest::ExtendedDocument`, define your callback as follows:
+`CouchRest::CastedModel` instances have 1 callback already defined for you:
+    `:validate`
+    
+Define your callback as follows:
 
-    save_callback :before, :generate_slug_from_name
+    set_callback :save, :before, :generate_slug_from_name
     
 CouchRest uses a mixin you can find in lib/mixins/callbacks which is extracted from Rails 3, here are some simple usage examples:
 
-    save_callback :before, :before_method
-    save_callback :after,  :after_method, :if => :condition
-    save_callback :around {|r| stuff; yield; stuff }
+    set_callback :save, :before, :before_method
+    set_callback :save, :after,  :after_method, :if => :condition
+    set_callback :save, :around {|r| stuff; yield; stuff }
+    
+    Or the aliased short version:
+    
+    before_save :before_method, :another_method
+    after_save  :after_method, :another_method, :if => :condition
+    around_save {|r| stuff; yield; stuff }
+    
+To halt the callback, simply return a :halt symbol in your callback method.
     
 Check the mixin or the ExtendedDocument class to see how to implement your own callbacks.
+
+### Properties
+
+    property :last_name,        :alias     => :family_name
+    property :read_only_value,  :read_only => true
+    property :name,             :length    => 4...20
+    property :price,            :type      => Integer
 
 ### Casting
 
@@ -131,6 +149,8 @@ you can define some casting rules.
 
     property :casted_attribute, :cast_as => 'WithCastedModelMixin'
     property :keywords,         :cast_as => ["String"]
+    property :occurs_at,        :cast_as => 'Time', :send => 'parse
+    property :end_date,         :cast_as => 'Date', :send => 'parse
 
 If you want to cast an array of instances from a specific Class, use the trick shown above ["ClassName"]
 
@@ -156,7 +176,6 @@ Low level usage:
 
     Article.paginate(:design_doc => 'Article', :view_name => 'by_date',
       :per_page => 3, :page => 2, :descending => true, :key => Date.today, :include_docs => true)
-      
       
 ## Ruby on Rails
 
